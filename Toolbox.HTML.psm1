@@ -1,4 +1,6 @@
-﻿$SMTPserver = $env:SMTP_SERVER
+﻿#Requires -Modules ActiveDirectory
+
+$SMTPserver = $env:SMTP_SERVER
 $Quotes = 'T:\Input\Extra\Quotes.txt'
 
 try {
