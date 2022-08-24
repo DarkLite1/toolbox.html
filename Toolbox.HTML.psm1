@@ -580,6 +580,8 @@ Function Send-MailHC {
         [ValidateNotNullOrEmpty()]
         [String]$From = "PowerShell@$env:COMPUTERNAME",
         [IO.FileInfo]$Save,
+        [String]$EventLogSource = $ScriptName,
+        [String]$EventLogName = 'HCScripts',
         [String]$Quotes = $Quotes
     )
 
@@ -766,9 +768,34 @@ $(
                 $End = $TextCharsToSave
             }
 
-            Import-EventLogParamsHC -Source $Header
+            if (-not $EventLogSource) {
+                $EventLogSource = 'test'
+            }
 
-            Write-EventLog @EventOutParams -Message ($env:USERNAME + ' - ' + 'Mail sent' + "`n`n" +
+            if (
+                -not(
+                    ([System.Diagnostics.EventLog]::Exists($EventLogName)) -and
+                    [System.Diagnostics.EventLog]::SourceExists($EventLogSource)
+                )
+            ) {
+                $newEventLogParams = @{
+                    LogName     = $EventLogName
+                    Source      = $EventLogSource
+                    ErrorAction = 'Stop'
+                }
+                New-EventLog @newEventLogParams
+            }
+    
+            $eventLogParams = @{
+                LogName     = $EventLogName
+                Source      = $EventLogSource
+                EntryType   = 'Information'
+                EventID     = '1' 
+                ErrorAction = 'Stop'
+            }
+
+            Write-EventLog @eventLogParams -Message (
+                'Mail sent' + "`n`n" +
                 "- Subject:`t" + $EmailParams.Subject + "`n" +
                 "- To:`t`t" + $EmailParams.To + "`n" +
                 "`n" + $Text.Substring(0, $End) + "`n`n" +
