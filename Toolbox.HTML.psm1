@@ -624,13 +624,6 @@ Function Send-MailHC {
             }
             #endregion
 
-            if ($PSISE) {
-                $LaunchedFrom = "Windows PowerShell ISE"
-            }
-            else {
-                $LaunchedFrom = "Scheduled task or console (not ISE)"
-            }
-
             #region Excel files that are opened can't be sent as attachment, so we copy them first
             $Attachment = New-Object System.Collections.ArrayList($null)
 
