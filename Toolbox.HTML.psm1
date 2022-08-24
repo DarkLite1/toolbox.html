@@ -609,7 +609,7 @@ Function Send-MailHC {
         Try {
             $EncUTF8 = New-Object System.Text.utf8encoding
 
-            $OrignalMessage = @()
+            $OriginalMessage = @()
             $FromAddreesNotFound = $false
 
             #region Check From address to make sure mails arrive
@@ -661,7 +661,7 @@ Function Send-MailHC {
         Foreach ($M in $Message) {
             $M = $M.Trim()
 
-            $OrignalMessage += $M
+            $OriginalMessage += $M
             if ($M -like '<*') {
                 # We receive pre-formatted HTML-code
                 $Messages += $M
@@ -738,8 +738,15 @@ $(
 
             #region Remove empty params
             $list = New-Object System.Collections.ArrayList($null)
-            foreach ($h in $EmailParams.Keys) { if ($($EmailParams.Item($h)) -eq $null) { $null = $list.Add($h) } }
-            foreach ($h in $list) { $EmailParams.Remove($h) }
+            
+            foreach ($h in $EmailParams.Keys) { 
+                if ($($EmailParams.Item($h)) -eq $null) {
+                    $null = $list.Add($h) 
+                } 
+            }
+            foreach ($h in $list) {
+                $EmailParams.Remove($h)
+            }
             #endregion
 
             Send-MailMessage @EmailParams
@@ -759,7 +766,7 @@ $(
             #region Save in event log
 
             # Limit the message text we capture in the Windows Event Log
-            $Text = $OrignalMessage | Out-String
+            $Text = $OriginalMessage | Out-String
 
             $TextCharsToSave = 600
 
@@ -785,11 +792,11 @@ $(
                 "- Import file:`t" + $ImportFile + "`n" +
                 "- Script location:`t" + $global:PSCommandPath
             )
-            #enregion
+            #endregion
         }
         Catch {
             $Global:Error.RemoveAt(0)
-            throw "E-mail sent succesfully but couldn't save the event in the Windows Event Log: $_"
+            throw "E-mail sent successfully but couldn't save the event in the Windows Event Log: $_"
         }
 
         if ($Save) {
