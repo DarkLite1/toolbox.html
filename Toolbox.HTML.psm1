@@ -820,7 +820,12 @@ $(
 
         if ($Save) {
             Try {
-                Out-File -FilePath $Save -InputObject $EmailParams.Body -Encoding utf8
+                $outFileParams = @{
+                    FilePath    = $Save 
+                    InputObject = $EmailParams.Body
+                    Encoding    = 'utf8'
+                }
+                Out-File @outFileParams
                 Write-Verbose "Mail saved in '$Save'"
             }
             Catch {
