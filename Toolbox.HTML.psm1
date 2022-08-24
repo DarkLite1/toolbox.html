@@ -825,7 +825,7 @@ $(
             }
             Catch {
                 $Global:Error.RemoveAt(0)
-                throw "E-mail sent succesfully but couldn't save the e-mail with full path name '$Save': $_"
+                throw "E-mail sent successfully but couldn't save the e-mail with full path name '$Save': $_"
             }
         }
     }
