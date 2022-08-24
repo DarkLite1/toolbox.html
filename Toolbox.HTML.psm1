@@ -610,7 +610,6 @@ Function Send-MailHC {
             $EncUTF8 = New-Object System.Text.utf8encoding
 
             $OriginalMessage = @()
-            $FromAddreesNotFound = $false
 
             #region Check From address to make sure mails arrive
             if (Test-MailExistInDomainHC $From) {
@@ -667,7 +666,7 @@ Function Send-MailHC {
                 $Messages += $M
             }
             else {
-                # We assume normal text is peing sent and put it in a paragraph
+                # We assume normal text is being sent and put it in a paragraph
                 $Messages += "<p>$M</p>"
             }
         }
@@ -738,7 +737,7 @@ $(
 
             #region Remove empty params
             $list = New-Object System.Collections.ArrayList($null)
-            
+
             foreach ($h in $EmailParams.Keys) { 
                 if ($($EmailParams.Item($h)) -eq $null) {
                     $null = $list.Add($h) 
