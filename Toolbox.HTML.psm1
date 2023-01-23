@@ -503,7 +503,7 @@ Function Send-MailHC {
     .PARAMETER Subject
         The Subject-header used in the e-mail.
 
-    .PARAMETER Message
+    .PARAMETER Body
         The message you want to send will appear by default in a paragraph 
         '<p>My message</p>'. If you want to have a title/header to, you can use:
         -Message "<h3>Header one:<\h3>", "My message"
@@ -515,7 +515,7 @@ Function Send-MailHC {
         - High
         - Low
 
-    .PARAMETER Attachments
+    .PARAMETER Attachment
         Specifies the path and file names of files to be attached to the e-mail 
         message.
 
@@ -558,22 +558,24 @@ Function Send-MailHC {
 
     [CmdLetBinding()]
     Param (
-        [parameter(Mandatory, Position = 0)]
+        [Parameter(Mandatory, Position = 0)]
         [ValidateNotNullOrEmpty()]
         [String[]]$To,
-        [parameter(Mandatory, Position = 1)]
+        [Parameter(Mandatory, Position = 1)]
         [ValidateNotNullOrEmpty()]
         [String]$Subject,
-        [parameter(Mandatory, Position = 2, ValueFromPipeline)]
+        [Parameter(Mandatory, Position = 2, ValueFromPipeline)]
         [ValidateNotNullOrEmpty()]
-        [String[]]$Message,
+        [Alias('Message')]
+        [String[]]$Body,
         [String[]]$Cc,
         [String[]]$Bcc,
         [String]$Header = 'Test',
         [ValidateScript( { Test-Path $_ -PathType Container })]
         [IO.DirectoryInfo]$LogFolder,
+        [Alias('Attachments')]
         [ValidateScript( { Test-Path $_ -PathType Leaf })]
-        [String[]]$Attachments,
+        [String[]]$Attachment,
         [ValidateSet('Low', 'Normal', 'High')]
         [String]$Priority = 'Normal',
         [String]$SMTPserver = $SMTPserver,
@@ -582,6 +584,7 @@ Function Send-MailHC {
         [IO.FileInfo]$Save,
         [String]$EventLogSource = $ScriptName,
         [String]$EventLogName = 'HCScripts',
+        [int]$MaxAttachmentSize = 20MB,
         [String]$Quotes = $Quotes
     )
 
@@ -609,10 +612,6 @@ Function Send-MailHC {
         }
 
         Try {
-            $EncUTF8 = New-Object System.Text.utf8encoding
-
-            $OriginalMessage = @()
-
             #region Check From address to make sure mails arrive
             if (Test-MailExistInDomainHC $From) {
                 Write-Warning "Send-MailHC: The header '$Header' will not be visible in MS Outlook, the DisplayName of '$From' will be visible instead because the sender account is known in the GAL."
@@ -626,22 +625,47 @@ Function Send-MailHC {
             }
             #endregion
 
-            #region Excel files that are opened can't be sent as attachment, so we copy them first
-            $Attachment = New-Object System.Collections.ArrayList($null)
+            $attachmentList = New-Object System.Collections.ArrayList($null)
+            
+            #region Create a copy of Excel files, open files cannot be sent
+            $tempFolder = "$env:TEMP\Send-MailHC {0}" -f (Get-Random)
 
-            $TmpFolder = "$env:TEMP\Send-MailHC {0}" -f (Get-Random)
-            foreach ($a in $Attachments) {
+            foreach ($a in $Attachment) {
                 if ($a -like '*.xlsx') {
-                    if (-not(Test-Path $TmpFolder)) {
-                        $null = New-Item $TmpFolder -ItemType Directory
+                    if (-not(Test-Path $tempFolder)) {
+                        $null = New-Item $tempFolder -ItemType 'Directory'
                     }
-                    Copy-Item $a -Destination $TmpFolder
+                    Copy-Item $a -Destination $tempFolder
 
-                    $null = $Attachment.Add("$TmpFolder\$(Split-Path $a -Leaf)")
+                    $null = $attachmentList.Add(
+                        "$tempFolder\$(Split-Path $a -Leaf)"
+                    )
                 }
                 else {
-                    $null = $Attachment.Add($a)
+                    $null = $attachmentList.Add($a)
                 }
+            }
+            #endregion
+
+            #region Check size of attachments
+            $attachmentTotalSize = 0
+
+            $attachmentList.foreach({
+                    $attachmentTotalSize += (Get-Item -LiteralPath $_).Length
+                })
+
+            $attachmentTooLargeMessage = $null
+
+            if ($attachmentTotalSize -ge $MaxAttachmentSize) {
+                $M = 'The total attachment size is {0} MB, which exceeds the maximum allowed attachment size of {1} MB for sending e-mails. Find the attachment in the log folder.' -f 
+                ([math]::Round(($attachmentTotalSize / 1MB), 2)),
+                ([math]::Round(($MaxAttachmentSize / 1MB)))
+
+                $attachmentTooLargeMessage = "<p><i>$M</i></p>" 
+
+                Write-Verbose $M
+
+                $attachmentList = $null
             }
             #endregion
         }
@@ -652,17 +676,16 @@ Function Send-MailHC {
     }
 
     Process {
-        Foreach ($M in $Message) {
-            $M = $M.Trim()
+        $bodyHtml = Foreach ($b in $Body) {
+            $b = $b.Trim()
 
-            $OriginalMessage += $M
-            if ($M -like '<*') {
-                # We receive pre-formatted HTML-code
-                $Messages += $M
+            if ($b -like '<*') {
+                # pre-formatted HTML-code
+                $b
             }
             else {
-                # We assume normal text is being sent and put it in a paragraph
-                $Messages += "<p>$M</p>"
+                # convert to paragraph
+                "<p>$b</p>"
             }
         }
     }
@@ -685,7 +708,8 @@ base {target="_blank"}
 </style></head><body>
 <h1>$Header</h1>
 <h2>The following has been reported:</h2>
-$Messages
+$bodyHtml
+$attachmentTooLargeMessage
 <h2>About</h2>
 <table>
 <colgroup><col/><col/></colgroup>
@@ -715,7 +739,7 @@ $(
 </body></html>
 "@
 
-            $EmailParams = @{
+            $mailParams = @{
                 To          = $To
                 Cc          = $Cc
                 Bcc         = $Bcc
@@ -725,25 +749,25 @@ $(
                 BodyAsHtml  = $True
                 Priority    = $Priority
                 SMTPServer  = $SMTPserver
-                Attachments = $Attachment
-                Encoding    = $EncUTF8
+                Attachments = $attachmentList
+                Encoding    = New-Object 'System.Text.utf8encoding'
                 ErrorAction = 'Stop'
             }
 
             #region Remove empty params
             $list = New-Object System.Collections.ArrayList($null)
 
-            foreach ($h in $EmailParams.Keys) { 
-                if ($($EmailParams.Item($h)) -eq $null) {
+            foreach ($h in $mailParams.Keys) { 
+                if ($($mailParams.Item($h)) -eq $null) {
                     $null = $list.Add($h) 
                 } 
             }
             foreach ($h in $list) {
-                $EmailParams.Remove($h)
+                $mailParams.Remove($h)
             }
             #endregion
 
-            Send-MailMessage @EmailParams
+            Send-MailMessage @mailParams
             Write-Verbose "Mail sent to '$To'"
         }
         Catch {
@@ -751,8 +775,8 @@ $(
             throw "Failed sending e-mail to '$($To)': $_"
         }
         Finally {
-            if (Test-Path $TmpFolder) {
-                Remove-Item -LiteralPath $TmpFolder -Recurse -Force
+            if (Test-Path $tempFolder) {
+                Remove-Item -LiteralPath $tempFolder -Recurse -Force
             }
         }
 
@@ -760,7 +784,7 @@ $(
             #region Save in event log
 
             # Limit the message text we capture in the Windows Event Log
-            $Text = $OriginalMessage | Out-String
+            $Text = $Body | Out-String
 
             $TextCharsToSave = 600
 
@@ -796,15 +820,15 @@ $(
 
             Write-EventLog @eventLogParams -Message (
                 'Mail sent' + "`n`n" +
-                "- Subject:`t" + $EmailParams.Subject + "`n" +
-                "- To:`t`t" + $EmailParams.To + "`n" +
+                "- Subject:`t" + $mailParams.Subject + "`n" +
+                "- To:`t`t" + $mailParams.To + "`n" +
                 "`n" + $Text.Substring(0, $End) + "`n`n" +
-                "- CC:`t`t" + $EmailParams.Cc + "`n" +
-                "- BCC:`t`t" + $EmailParams.Bcc + "`n" +
-                "- Priority:`t" + $EmailParams.Priority + "`n" +
-                "- SMTPServer:`t" + $EmailParams.SMTPServer + "`n" +
-                "- From:`t`t" + $EmailParams.From + "`n" +
-                "- Attachments:`t" + $EmailParams.Attachments + "`n" +
+                "- CC:`t`t" + $mailParams.Cc + "`n" +
+                "- BCC:`t`t" + $mailParams.Bcc + "`n" +
+                "- Priority:`t" + $mailParams.Priority + "`n" +
+                "- SMTPServer:`t" + $mailParams.SMTPServer + "`n" +
+                "- From:`t`t" + $mailParams.From + "`n" +
+                "- Attachments:`t" + $mailParams.Attachments + "`n" +
                 "- Start time:`t" + $(if ($ScriptStartTime) { $ScriptStartTime.ToString('dd/MM/yyyy HH:mm:ss (dddd)') }) + "`n" +
                 "- Total runtime:`t" + $ScriptRunTime + "`n" +
                 "- LogFolder:`t" + $LogFolder + "`n" +
@@ -822,7 +846,7 @@ $(
             Try {
                 $outFileParams = @{
                     FilePath    = $Save 
-                    InputObject = $EmailParams.Body
+                    InputObject = $mailParams.Body
                     Encoding    = 'utf8'
                 }
                 Out-File @outFileParams
