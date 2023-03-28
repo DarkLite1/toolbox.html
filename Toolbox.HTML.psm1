@@ -508,6 +508,10 @@ Function Send-MailHC {
         '<p>My message</p>'. If you want to have a title/header to, you can use:
         -Message "<h3>Header one:<\h3>", "My message"
 
+    .PARAMETER BodyHtml
+        Contains pure HTML and will not be formatted by this function. Send
+        as is.
+
     .PARAMETER Priority
         Specifies the priority of the e-mail message. 
         Valid values
@@ -554,9 +558,20 @@ Function Send-MailHC {
 
         Bob and Jack receive an e-mail with high priority to inform them that 
         they did a good job.
+
+    .EXAMPLE
+        $params = @{
+            To       = @('Bob@domain.com', 'Jack@Reacher.com')
+            Subject  = 'Summary'
+            BodyHtml = '<h1>Star Trek</h1>'
+            Priority = 'High'
+        }
+        Send-MailHC @params
+
+        Send pure HTML strings.
     #>
 
-    [CmdLetBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'first')]
     Param (
         [Parameter(Mandatory, Position = 0)]
         [ValidateNotNullOrEmpty()]
@@ -564,17 +579,20 @@ Function Send-MailHC {
         [Parameter(Mandatory, Position = 1)]
         [ValidateNotNullOrEmpty()]
         [String]$Subject,
-        [Parameter(Mandatory, Position = 2, ValueFromPipeline)]
+        [Parameter(Mandatory, ParameterSetName = 'first', Position = 2, ValueFromPipeline)]
         [ValidateNotNullOrEmpty()]
         [Alias('Message')]
         [String[]]$Body,
+        [Parameter(Mandatory, ParameterSetName = 'second', Position = 2, ValueFromPipeline)]
+        [ValidateNotNullOrEmpty()]
+        [String]$BodyHtml,
         [String[]]$Cc,
         [String[]]$Bcc,
         [String]$Header = 'Test',
-        [ValidateScript( { Test-Path $_ -PathType Container })]
+        [ValidateScript( { Test-Path $_ -PathType 'Container' })]
         [IO.DirectoryInfo]$LogFolder,
         [Alias('Attachments')]
-        [ValidateScript( { Test-Path $_ -PathType Leaf })]
+        [ValidateScript( { Test-Path $_ -PathType 'Leaf' })]
         [String[]]$Attachment,
         [ValidateSet('Low', 'Normal', 'High')]
         [String]$Priority = 'Normal',
@@ -657,7 +675,7 @@ Function Send-MailHC {
             $attachmentTooLargeMessage = $null
 
             if ($attachmentTotalSize -ge $MaxAttachmentSize) {
-                $M = 'The total attachment size is {0} MB, which exceeds the maximum allowed attachment size of {1} MB for sending e-mails. Find the attachment in the log folder.' -f 
+                $M = "The total attachment size is {0} MB, which exceeds the maximum allowed attachment size of {1} MB for sending e-mails. Find the attachment in the $("<a href=`""$LogFolder"`">log folder</a>")." -f 
                 ([math]::Round(($attachmentTotalSize / 1MB), 2)),
                 ([math]::Round(($MaxAttachmentSize / 1MB)))
 
@@ -676,7 +694,7 @@ Function Send-MailHC {
     }
 
     Process {
-        $bodyHtml = Foreach ($b in $Body) {
+        $bodyHtmlContent = Foreach ($b in $Body) {
             $b = $b.Trim()
 
             if ($b -like '<*') {
@@ -692,52 +710,57 @@ Function Send-MailHC {
 
     End {
         Try {
-            $HTML = @"
-<!DOCTYPE html>
-<html><head><style type="text/css">
-body {font-family:verdana;background-color:white;}
-h1 {background-color:black;color:white;margin-bottom:10px;text-indent:10px;page-break-before: always;}
-h2 {background-color:lightGrey;margin-bottom:10px;text-indent:10px;page-break-before: always;}
-h3 {background-color:lightGrey;margin-bottom:10px;font-size:16px;text-indent:10px;page-break-before: always;}
-p {font-size: 14px;margin-left:10px;}
-p.italic {font-style: italic;font-size: 12px;}
-table {font-size:14px;border-collapse:collapse;border:1px none;padding:3px;text-align:left;padding-right:10px;margin-left:10px;}
-td, th {font-size:14px;border-collapse:collapse;border:1px none;padding:3px;text-align:left;padding-right:10px}
-li {font-size: 14px;}
-base {target="_blank"}
-</style></head><body>
-<h1>$Header</h1>
-<h2>The following has been reported:</h2>
-$bodyHtml
-$attachmentTooLargeMessage
-<h2>About</h2>
-<table>
-<colgroup><col/><col/></colgroup>
-$(if($ScriptStartTime){$("<tr><th>Start time</th><td>{0:00}/{1:00}/{2:00} {3:00}:{4:00} ({5})</td></tr>" -f `
-$ScriptStartTime.Day,$ScriptStartTime.Month,$ScriptStartTime.Year,$ScriptStartTime.Hour,$ScriptStartTime.Minute,$ScriptStartTime.DayOfWeek)})
-$(if($ScriptRunTime){"<tr><th>Total runtime</th><td>$ScriptRunTime $(if($MaxThreads){"($MaxThreads jobs at once)"})</td></tr>"})
-$(
-    if ($LogFolder) {
-        "<tr><th>Log folder</th><td>$("<a href=`""$LogFolder"`">Open log folder</a>")</td></tr>"
-    }
-)
-$(
-    if ($ImportFile) {
-        "<tr><th>Import file</th><td>$("<a href=`""$ImportFile"`">$ImportFile</a>")</td></tr>"
-    }
-)
-$(if($global:PSCommandPath){"<tr><th>PSCommandPath</th><td>$global:PSCommandPath</td></tr>"})
-<tr><th>Host</th><td>$($host.Name)</td></tr>
-<tr><th>ComputerName</th><td>$env:COMPUTERNAME</td></tr>
-<tr><th>Whoami</th><td>$("$env:USERDNSDOMAIN\$env:USERNAME")</td></tr>
-</table>
-$(
-    if (($Quotes) -and (Test-Path $Quotes)) {
-        '<p class=italic>"' + $(Get-Content $Quotes | Get-Random -ErrorAction SilentlyContinue) + '"</p>'
-    }
-)
-</body></html>
-"@
+            $HTML = if ($BodyHtml) {
+                $BodyHtml
+            }
+            else {
+                @"
+                <!DOCTYPE html>
+                <html><head><style type="text/css">
+                body {font-family:verdana;background-color:white;}
+                h1 {background-color:black;color:white;margin-bottom:10px;text-indent:10px;page-break-before: always;}
+                h2 {background-color:lightGrey;margin-bottom:10px;text-indent:10px;page-break-before: always;}
+                h3 {background-color:lightGrey;margin-bottom:10px;font-size:16px;text-indent:10px;page-break-before: always;}
+                p {font-size: 14px;margin-left:10px;}
+                p.italic {font-style: italic;font-size: 12px;}
+                table {font-size:14px;border-collapse:collapse;border:1px none;padding:3px;text-align:left;padding-right:10px;margin-left:10px;}
+                td, th {font-size:14px;border-collapse:collapse;border:1px none;padding:3px;text-align:left;padding-right:10px}
+                li {font-size: 14px;}
+                base {target="_blank"}
+                </style></head><body>
+                <h1>$Header</h1>
+                <h2>The following has been reported:</h2>
+                $bodyHtmlContent
+                $attachmentTooLargeMessage
+                <h2>About</h2>
+                <table>
+                <colgroup><col/><col/></colgroup>
+                $(if($ScriptStartTime){$("<tr><th>Start time</th><td>{0:00}/{1:00}/{2:00} {3:00}:{4:00} ({5})</td></tr>" -f `
+                $ScriptStartTime.Day,$ScriptStartTime.Month,$ScriptStartTime.Year,$ScriptStartTime.Hour,$ScriptStartTime.Minute,$ScriptStartTime.DayOfWeek)})
+                $(if($ScriptRunTime){"<tr><th>Total runtime</th><td>$ScriptRunTime $(if($MaxThreads){"($MaxThreads jobs at once)"})</td></tr>"})
+                $(
+                    if ($LogFolder) {
+                        "<tr><th>Log folder</th><td>$("<a href=`""$LogFolder"`">Open log folder</a>")</td></tr>"
+                    }
+                )
+                $(
+                    if ($ImportFile) {
+                        "<tr><th>Import file</th><td>$("<a href=`""$ImportFile"`">$ImportFile</a>")</td></tr>"
+                    }
+                )
+                $(if($global:PSCommandPath){"<tr><th>PSCommandPath</th><td>$global:PSCommandPath</td></tr>"})
+                <tr><th>Host</th><td>$($host.Name)</td></tr>
+                <tr><th>ComputerName</th><td>$env:COMPUTERNAME</td></tr>
+                <tr><th>Whoami</th><td>$("$env:USERDNSDOMAIN\$env:USERNAME")</td></tr>
+                </table>
+                $(
+                    if (($Quotes) -and (Test-Path $Quotes)) {
+                        '<p class=italic>"' + $(Get-Content $Quotes | Get-Random -ErrorAction SilentlyContinue) + '"</p>'
+                    }
+                )
+                </body></html>
+"@                
+            }
 
             $mailParams = @{
                 To          = $To
