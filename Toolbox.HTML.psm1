@@ -799,7 +799,7 @@ Function Send-MailHC {
         }
         Finally {
             if (Test-Path $tempFolder) {
-                Remove-Item -LiteralPath $tempFolder -Recurse -Force
+                Remove-Item -LiteralPath $tempFolder -Recurse -Force -EA Ignore
             }
         }
 
