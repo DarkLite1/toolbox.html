@@ -1,4 +1,7 @@
-﻿#Requires -Modules ActiveDirectory
+﻿<# 
+    Auto loading modules in PS7 fails with this require
+    #Requires -Modules ActiveDirectory 
+#>
 
 $SMTPserver = $env:SMTP_SERVER
 $Quotes = 'T:\Input\Extra\Quotes.txt'
