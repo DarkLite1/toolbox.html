@@ -738,23 +738,70 @@ Function Send-MailHC {
                 <h2>About</h2>
                 <table>
                 <colgroup><col/><col/></colgroup>
-                $(if($ScriptStartTime){$("<tr><th>Start time</th><td>{0:00}/{1:00}/{2:00} {3:00}:{4:00} ({5})</td></tr>" -f `
-                $ScriptStartTime.Day,$ScriptStartTime.Month,$ScriptStartTime.Year,$ScriptStartTime.Hour,$ScriptStartTime.Minute,$ScriptStartTime.DayOfWeek)})
-                $(if($ScriptRunTime){"<tr><th>Total runtime</th><td>$ScriptRunTime $(if($MaxThreads){"($MaxThreads jobs at once)"})</td></tr>"})
+                $(
+                    if ($ScriptStartTime) {
+                        $(
+                            "<tr>
+                                <th>Start time</th>
+                                <td>{0:00}/{1:00}/{2:00} {3:00}:{4:00} ({5})</td>
+                            </tr>" -f
+                            $ScriptStartTime.Day,
+                            $ScriptStartTime.Month,
+                            $ScriptStartTime.Year,
+                            $ScriptStartTime.Hour,
+                            $ScriptStartTime.Minute,
+                            $ScriptStartTime.DayOfWeek
+                        )
+                    }
+                )
+                $(
+                    if ($ScriptRunTime) {
+                        "<tr>
+                            <th>Total runtime</th>
+                            <td>$ScriptRunTime $(if($MaxThreads){"($MaxThreads jobs at once)"})</td>
+                        </tr>"
+                    }
+                )
                 $(
                     if ($LogFolder) {
-                        "<tr><th>Log folder</th><td>$("<a href=`""$LogFolder"`">Open log folder</a>")</td></tr>"
+                        "<tr>
+                            <th>Log folder</th>
+                            <td>$("<a href=`""$LogFolder"`">Open log folder</a>")</td>
+                        </tr>"
                     }
                 )
                 $(
                     if ($ImportFile) {
-                        "<tr><th>Import file</th><td>$("<a href=`""$ImportFile"`">$ImportFile</a>")</td></tr>"
+                        "<tr>
+                            <th>Import file</th>
+                            <td>$("<a href=`""$ImportFile"`">$ImportFile</a>")</td>
+                        </tr>"
                     }
                 )
-                $(if($global:PSCommandPath){"<tr><th>PSCommandPath</th><td>$global:PSCommandPath</td></tr>"})
-                <tr><th>Host</th><td>$($host.Name)</td></tr>
-                <tr><th>ComputerName</th><td>$env:COMPUTERNAME</td></tr>
-                <tr><th>Whoami</th><td>$("$env:USERDNSDOMAIN\$env:USERNAME")</td></tr>
+                $(
+                    if ($global:PSCommandPath) {
+                        "<tr>
+                            <th>PSCommandPath</th>
+                            <td>$global:PSCommandPath</td>
+                        </tr>"
+                    }
+                )
+                <tr>
+                    <th>Host</th>
+                    <td>$($host.Name)</td>
+                </tr>
+                <tr>
+                    <th>PowerShell version</th>
+                    <td>$($PSVersionTable.PSVersion.ToString())</td>
+                </tr>
+                <tr>
+                    <th>ComputerName</th>
+                    <td>$env:COMPUTERNAME</td>
+                </tr>
+                <tr>
+                    <th>Whoami</th>
+                    <td>$("$env:USERDNSDOMAIN\$env:USERNAME")</td>
+                </tr>
                 </table>
                 $(
                     if (($Quotes) -and (Test-Path $Quotes)) {
