@@ -1,6 +1,6 @@
-﻿<# 
+﻿<#
     Auto loading modules in PS7 fails with this require
-    #Requires -Modules ActiveDirectory 
+    #Requires -Modules ActiveDirectory
 #>
 
 $SMTPserver = $env:SMTP_SERVER
@@ -24,11 +24,11 @@ Function ConvertTo-HTMLlinkHC {
         Converts a path or URL to a clickable link and generates the correct HTML code: '<a href="LINK/PATH/URL">Click me</a>'.
 
     .PARAMETER Name
-        The name that represents the link, it's the text that people see and 
+        The name that represents the link, it's the text that people see and
         on what they click to open the link  '<a href="LINK/PATH/URL">Name</a>'.
-        
-        By default the 'Name' will be formatted so the first letter is in 
-        upper case and the rest in lower case. In case the name does not need 
+
+        By default the 'Name' will be formatted so the first letter is in
+        upper case and the rest in lower case. In case the name does not need
         formatting use 'FormatName = $false'.
 
         -Name 'gOoGLe'      > 'Google'
@@ -38,9 +38,9 @@ Function ConvertTo-HTMLlinkHC {
         Location of a folder, file or URL.
 
     .PARAMETER FormatName
-        The field 'Name' is always formatted so the first is in upper case and 
-        the rest in lower case. 
-        
+        The field 'Name' is always formatted so the first is in upper case and
+        the rest in lower case.
+
         Valid options:
         -Name 'lOg FoLdEr'                     > 'Log folder' (default)
         -Name 'lOg FoLdEr' -FormatName $False  > 'lOg FoLdEr'
@@ -48,7 +48,7 @@ Function ConvertTo-HTMLlinkHC {
     .EXAMPLE
         $params = @{
             Name = 'scheduled Task'
-            Path = '\\PC1\Log\SchedUleD TaSk'    
+            Path = '\\PC1\Log\SchedUleD TaSk'
         }
         ConvertTo-HTMLlinkHC @params
 
@@ -115,7 +115,7 @@ Function ConvertTo-HtmlListHC {
         Creates an unordered HTML list.
 
     .DESCRIPTION
-        Creates an unordered HTML list from an array to use in an HTML 
+        Creates an unordered HTML list from an array to use in an HTML
         document, like an e-mail or a HTML file.
 
     .PARAMETER Message
@@ -123,7 +123,7 @@ Function ConvertTo-HtmlListHC {
 
     .PARAMETER Spacing
         Defines how close the items are together. T
-        
+
         Valid options:
         'Normal': Close together, no breaks in between (default)
         'Wide'  : Double breaks between each item
@@ -132,8 +132,8 @@ Function ConvertTo-HtmlListHC {
         Add a header '<h3>My list title</h3>' above the unordered list.
 
     .PARAMETER FootNote
-        Add a small text at the bottom of the unordered list in a smaller font 
-        and italic. This is convenient for adding a small explanation of the 
+        Add a small text at the bottom of the unordered list in a smaller font
+        and italic. This is convenient for adding a small explanation of the
         items or a legend.
 
     .EXAMPLE
@@ -141,7 +141,7 @@ Function ConvertTo-HtmlListHC {
             Message = @('Item 3', 'Item 1', 'Item 2')
         }
         ConvertTo-HTMLlistHC @params
-        
+
         Create the following HTML code:
         '<ul>
             <li>Item 1</li>
@@ -156,7 +156,7 @@ Function ConvertTo-HtmlListHC {
             FootNote = 'These are all tasting sweet'
         }
         ConvertTo-HTMLlistHC @params
-        
+
         Create the following HTML code:
         '<ul>
             <li>Apples<br><br></li>
@@ -218,11 +218,11 @@ Function Get-ScriptRuntimeHC {
         Calculates the total runtime of the script.
 
     .DESCRIPTION
-        This function checks how long the script has been running by using the 
+        This function checks how long the script has been running by using the
         switches 'Start' and 'Stop' in the beginning and end of the script.
 
     .PARAMETER Start
-        Start time when the script starts. Usually put in the beginning of the 
+        Start time when the script starts. Usually put in the beginning of the
         script.
 
     .PARAMETER Stop
@@ -269,12 +269,12 @@ Function New-LogFileNameHC {
         Generates strings that can be used as a file name.
 
     .DESCRIPTION
-        Converts strings or paths to usable formats for file names and adds the 
-        date if required. It filters out all the unaccepted characters by 
-        Windows to use a UNC-path or local-path as a file name. It's also 
-        useful for adding the date to a string. In case a path is provided, the 
-        first letter will be in upper case and the rest will be in lower case. 
-        It will also check if the log file already exists, and if so, create a 
+        Converts strings or paths to usable formats for file names and adds the
+        date if required. It filters out all the unaccepted characters by
+        Windows to use a UNC-path or local-path as a file name. It's also
+        useful for adding the date to a string. In case a path is provided, the
+        first letter will be in upper case and the rest will be in lower case.
+        It will also check if the log file already exists, and if so, create a
         new one with an increased number [0], [1], ..
 
     .PARAMETER LogFolder
@@ -284,9 +284,9 @@ Function New-LogFileNameHC {
         Can be a path name or just a string.
 
     .PARAMETER Date
-        Adds the date to the name. When using one of the 'Script-options', make 
-        sure to use 'Get-ScriptRuntime (Start/Stop)' in your script. 
-        
+        Adds the date to the name. When using one of the 'Script-options', make
+        sure to use 'Get-ScriptRuntime (Start/Stop)' in your script.
+
         Valid options:
         'ScriptStartTime' : Start time of the script
         'ScriptEndTime'   : End time of the script
@@ -294,14 +294,14 @@ Function New-LogFileNameHC {
 
     .PARAMETER Location
         Places the selected date in front or at the end of the name.
-        
+
         Valid options:
         - Begin : 2014-09-25 - Name (default)
         - End   : Name - 2014-09-25
 
     .PARAMETER Format
-        Format used for the selected date. 
-        
+        Format used for the selected date.
+
         Valid options:
         - yyyy-MM-dd HHmm (DayOfWeek)   : 2014-09-25 1431 (Thursday) (default)
         - yyyy-MM-dd HHmmss (DayOfWeek) : 2014-09-25 143121 (Thursday)
@@ -312,13 +312,13 @@ Function New-LogFileNameHC {
         - yyyyMMdd                      : 20140925
 
     .PARAMETER NoFormatting
-        Doesn't change the string to phrase format with a capital in the 
-        beginning. However, it still removes/replaces all characters that are 
+        Doesn't change the string to phrase format with a capital in the
+        beginning. However, it still removes/replaces all characters that are
         not allowed in a Windows file name.
 
     .PARAMETER Unique
-        When this switch is set, we will first check if a file exists with the 
-        same name. If it does, we add a number to the file, every time it runs 
+        When this switch is set, we will first check if a file exists with the
+        same name. If it does, we add a number to the file, every time it runs
         the counter will go up.
 
     .EXAMPLE
@@ -384,33 +384,48 @@ Function New-LogFileNameHC {
     Begin {
         if ($Date) {
             Switch ($Date) {
-                'ScriptStartTime' { $d = $ScriptStartTime }
-                'ScriptEndTime' { $d = $ScriptEndTime }
-                'CurrentTime' { $d = Get-Date }
+                'ScriptStartTime' { $d = $ScriptStartTime; break }
+                'ScriptEndTime' { $d = $ScriptEndTime; break }
+                'CurrentTime' { $d = Get-Date; break }
             }
 
             Switch ($Format) {
                 'yyyy-MM-dd HHmm (DayOfWeek)' {
                     $DateFormat = "{0:00}-{1:00}-{2:00} {3:00}{4:00} ({5})" `
                         -f $d.Year, $d.Month, $d.Day, $d.Hour, $d.Minute, $d.DayOfWeek
+                    break
                 }
                 'yyyy-MM-dd HHmmss (DayOfWeek)' {
                     $DateFormat = "{0:00}-{1:00}-{2:00} {3:00}{4:00}{5:00} ({6})" `
                         -f $d.Year, $d.Month, $d.Day, $d.Hour, $d.Minute, $d.Second, $d.DayOfWeek
+                    break
                 }
                 'yyyyMMdd HHmm (DayOfWeek)' {
                     $DateFormat = "{0:00}{1:00}{2:00} {3:00}{4:00} ({5})" `
                         -f $d.Year, $d.Month, $d.Day, $d.Hour, $d.Minute, $d.DayOfWeek
+                    break
                 }
-                'yyyy-MM-dd HHmm' { $DateFormat = ($d).ToString("yyyy-MM-dd HHmm") }
-                'yyyyMMdd HHmm' { $DateFormat = ($d).ToString("yyyyMMdd HHmm") }
-                'yyyy-MM-dd' { $DateFormat = ($d).ToString("yyyy-MM-dd") }
-                'yyyyMMdd' { $DateFormat = ($d).ToString("yyyyMMdd") }
+                'yyyy-MM-dd HHmm' {
+                    $DateFormat = ($d).ToString("yyyy-MM-dd HHmm")
+                    break
+                }
+                'yyyyMMdd HHmm' {
+                    $DateFormat = ($d).ToString("yyyyMMdd HHmm")
+                    break
+                }
+                'yyyy-MM-dd' {
+                    $DateFormat = ($d).ToString("yyyy-MM-dd")
+                    break
+                }
+                'yyyyMMdd' {
+                    $DateFormat = ($d).ToString("yyyyMMdd")
+                    break
+                }
             }
 
             Switch ($Position) {
-                'Begin' { $Prefix = "$DateFormat - " }
-                'End' { $Postfix = " - $DateFormat" }
+                'Begin' { $Prefix = "$DateFormat - "; break }
+                'End' { $Postfix = " - $DateFormat"; break }
             }
         }
     }
@@ -451,15 +466,15 @@ Function New-LogFileNameHC {
             }
 
             if ($Unique) {
-                $FileName = "$LogFolder\$Prefix$N$Postfix{0}$Extension"
+                $templateFileName = "$LogFolder\$Prefix$N$Postfix - {0}$Extension"
 
-                Function Increment-Index ($f) {
-                    $parts = $f.Split('{}')
-                    "$($parts[0]){$((1 + $parts[1]))}$($parts[2])"
-                }
+                $number = 0
+
+                $FileName = $templateFileName -f $number
 
                 while (Test-Path -LiteralPath $FileName) {
-                    $FileName = Increment-Index $FileName
+                    $number++
+                    $FileName = $templateFileName -f $number
                 }
             }
             else {
@@ -473,41 +488,41 @@ Function New-LogFileNameHC {
 Function Send-MailHC {
     <#
     .SYNOPSIS
-        Send an e-mail message as anonymous, when allowed by the SMTP-Relay 
+        Send an e-mail message as anonymous, when allowed by the SMTP-Relay
         server.
 
     .DESCRIPTION
-        This function sends out a preformatted HTML e-mail by only providing 
-        the recipient, subject and body. The e-mail formatting is optimized for 
-        MS Outlook. All e-mails sent will be stored in the Windows Event Log 
+        This function sends out a preformatted HTML e-mail by only providing
+        the recipient, subject and body. The e-mail formatting is optimized for
+        MS Outlook. All e-mails sent will be stored in the Windows Event Log
         under the event log of the ScriptName (Header parameter).
 
     .PARAMETER From
-        The sender address, by preference this is an existing mailbox so we get 
+        The sender address, by preference this is an existing mailbox so we get
         the bounce back mail in case of failure.
 
     .PARAMETER To
         The e-mail address of the recipient(s) you wish to e-mail.
 
     .PARAMETER Bcc
-        The e-mail address of the recipient(s) you wish to e-mail in Blind 
-        Carbon Copy. Other users will not see the e-mail address of users in 
+        The e-mail address of the recipient(s) you wish to e-mail in Blind
+        Carbon Copy. Other users will not see the e-mail address of users in
         the 'Bcc' field.
 
     .PARAMETER Cc
-        The e-mail address of the recipient(s) you wish to e-mail in Carbon 
+        The e-mail address of the recipient(s) you wish to e-mail in Carbon
         Copy.
 
     .PARAMETER From
-        The e-mail address from which the mail is sent. If not specified, 
-        the default value will be the script name or 'Test' when the script 
+        The e-mail address from which the mail is sent. If not specified,
+        the default value will be the script name or 'Test' when the script
         name is unknown.
 
     .PARAMETER Subject
         The Subject-header used in the e-mail.
 
     .PARAMETER Body
-        The message you want to send will appear by default in a paragraph 
+        The message you want to send will appear by default in a paragraph
         '<p>My message</p>'. If you want to have a title/header to, you can use:
         -Message "<h3>Header one:<\h3>", "My message"
 
@@ -516,14 +531,14 @@ Function Send-MailHC {
         as is.
 
     .PARAMETER Priority
-        Specifies the priority of the e-mail message. 
+        Specifies the priority of the e-mail message.
         Valid values
         - Normal (default)
         - High
         - Low
 
     .PARAMETER Attachment
-        Specifies the path and file names of files to be attached to the e-mail 
+        Specifies the path and file names of files to be attached to the e-mail
         message.
 
     .PARAMETER LogFolder
@@ -541,25 +556,25 @@ Function Send-MailHC {
             Subject = 'Flavor report'
         }
         @(
-            '<h3>Fruits:</h3>', 
+            '<h3>Fruits:</h3>',
             'Peers and apples are great',
             '<h3>Vegetables:</h3>',
             'Aubergines not so much'
         ) | Send-MailHC @params
 
-        Bob will receive an e-mail with the subject 'Flavor report' and the a 
+        Bob will receive an e-mail with the subject 'Flavor report' and the a
         summary of fruits and vegetables with each their own header/title.
 
     .EXAMPLE
         $params = @{
             To       = @('Bob@domain.com', 'Jack@Reacher.com')
             Subject  = 'Summary'
-            Message  = 'You did great today. Thank you for participating' 
+            Message  = 'You did great today. Thank you for participating'
             Priority = 'High'
         }
         Send-MailHC @params
 
-        Bob and Jack receive an e-mail with high priority to inform them that 
+        Bob and Jack receive an e-mail with high priority to inform them that
         they did a good job.
 
     .EXAMPLE
@@ -614,20 +629,20 @@ Function Send-MailHC {
             <#
             .SYNOPSIS
                 Check if a mail address exists.
-        
+
             .DESCRIPTION
                 Check if a mail address exists within the active directory.
-        
+
             .EXAMPLE
                 Test-MailExistInDomainHC Alerts@sagrex.be
                 Returns data when it exists and nothing when it doesn't exist.
             #>
-        
+
             Param (
                 [Parameter(Mandatory)]
                 [String]$Mailbox
             )
-        
+
             $Filter = "mail -eq ""$Mailbox"" -or proxyAddresses -eq ""smtp:$Mailbox"""
             Get-ADObject -Properties mail, proxyAddresses -Filter $Filter
         }
@@ -647,7 +662,7 @@ Function Send-MailHC {
             #endregion
 
             $attachmentList = New-Object System.Collections.ArrayList($null)
-            
+
             #region Create a copy of Excel files, open files cannot be sent
             $tempFolder = "$env:TEMP\Send-MailHC {0}" -f (Get-Random)
 
@@ -678,11 +693,11 @@ Function Send-MailHC {
             $attachmentTooLargeMessage = $null
 
             if ($attachmentTotalSize -ge $MaxAttachmentSize) {
-                $M = "The total attachment size is {0} MB, which exceeds the maximum allowed attachment size of {1} MB for sending e-mails. Find the attachment in the $("<a href=`""$LogFolder"`">log folder</a>")." -f 
+                $M = "The total attachment size is {0} MB, which exceeds the maximum allowed attachment size of {1} MB for sending e-mails. Find the attachment in the $("<a href=`""$LogFolder"`">log folder</a>")." -f
                 ([math]::Round(($attachmentTotalSize / 1MB), 2)),
                 ([math]::Round(($MaxAttachmentSize / 1MB)))
 
-                $attachmentTooLargeMessage = "<p><i>$M</i></p>" 
+                $attachmentTooLargeMessage = "<p><i>$M</i></p>"
 
                 Write-Verbose $M
 
@@ -809,7 +824,7 @@ Function Send-MailHC {
                     }
                 )
                 </body></html>
-"@                
+"@
             }
 
             $mailParams = @{
@@ -830,10 +845,10 @@ Function Send-MailHC {
             #region Remove empty params
             $list = New-Object System.Collections.ArrayList($null)
 
-            foreach ($h in $mailParams.Keys) { 
+            foreach ($h in $mailParams.Keys) {
                 if ($($mailParams.Item($h)) -eq $null) {
-                    $null = $list.Add($h) 
-                } 
+                    $null = $list.Add($h)
+                }
             }
             foreach ($h in $list) {
                 $mailParams.Remove($h)
@@ -882,12 +897,12 @@ Function Send-MailHC {
                 }
                 New-EventLog @newEventLogParams
             }
-    
+
             $eventLogParams = @{
                 LogName     = $EventLogName
                 Source      = $EventLogSource
                 EntryType   = 'Information'
-                EventID     = '1' 
+                EventID     = '1'
                 ErrorAction = 'Stop'
             }
 
@@ -918,7 +933,7 @@ Function Send-MailHC {
         if ($Save) {
             Try {
                 $outFileParams = @{
-                    FilePath    = $Save 
+                    FilePath    = $Save
                     InputObject = $mailParams.Body
                     Encoding    = 'utf8'
                 }
