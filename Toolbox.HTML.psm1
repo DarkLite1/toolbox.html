@@ -616,7 +616,7 @@ Function Send-MailHC {
         [String]$Priority = 'Normal',
         [String]$SMTPserver = $SMTPserver,
         [ValidateNotNullOrEmpty()]
-        [String]$From = "PowerShell@$env:COMPUTERNAME",
+        [String]$From = 'no-reply-bnl-automation@heidelbergmaterials.com',
         [IO.FileInfo]$Save,
         [String]$EventLogSource = $ScriptName,
         [String]$EventLogName = 'HCScripts',
